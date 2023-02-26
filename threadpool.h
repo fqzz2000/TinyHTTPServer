@@ -51,7 +51,7 @@ threadpool<T>::threadpool(int thread_number, int max_requests) : m_thread_number
     {
         throw std::exception();
     }
-    mthreads = new pthread_t[m_thread_number];
+    m_threads = new pthread_t[m_thread_number];
     if (!m_threads)
     {
         throw std::exception();
@@ -102,7 +102,7 @@ bool threadpool<T>::append(T *request)
 template <typename T>
 void *threadpool<T>::worker(void *arg)
 {
-    threadpool *pool = (thread_pool *)arg;
+    threadpool *pool = (threadpool *)arg;
     pool->run();
     // 返回值没有用，因为detach
     return pool;
@@ -116,7 +116,7 @@ void threadpool<T>::run()
         // 通过semaphore实现同步
         m_queuestat.wait();
         m_queuelocker.lock();
-        // 这个判断真的必要吗？
+        // 这个判断真的必要吗？应该不必要，可以删掉
         if (m_workqueue.empty())
         {
             m_queuelocker.unlock();
@@ -127,7 +127,7 @@ void threadpool<T>::run()
         m_workqueue.pop_front();
         m_queuelocker.unlock();
 
-        // 如果没获取到，继续忙等
+        // 如果没获取到，继续忙等这个也不必要吧？
         if (!request)
         {
             continue;
